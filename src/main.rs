@@ -3,11 +3,14 @@ use std::env;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init();
+
     let port = get_port();
     let address: &str = &get_address();
     let server = HttpServer::new(|| {
         App::new()
             .wrap(middleware::NormalizePath::trim())
+            .wrap(middleware::Logger::default())
             .service(greet)
     })
     .bind((address, port))?
