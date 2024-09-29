@@ -11,11 +11,10 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(middleware::NormalizePath::trim())
             .wrap(middleware::Logger::default())
-            .service(greet)
+            .service(is_prime_endpoint)
     })
     .bind((address, port))?
     .run();
-    println!("Server started on: {address}:{port}");
     server.await
 }
 
@@ -29,7 +28,7 @@ fn get_address() -> String {
 }
 
 #[get("/api/isprime/{number}")]
-async fn greet(num_string: web::Path<String>) -> impl Responder {
+async fn is_prime_endpoint(num_string: web::Path<String>) -> impl Responder {
     let any_num: i32 = match num_string.parse() {
         Ok(any_num) => any_num,
         Err(_) => return r#"{"error": "This operation isn't prime for success"}"#.to_owned(),
@@ -45,25 +44,17 @@ async fn greet(num_string: web::Path<String>) -> impl Responder {
 }
 
 /// Test whether a number is prime. Checks every odd number up to `sqrt(n)`.
-pub fn is_prime(n: u32) -> bool {
-    if n <= 1 {
-        return false;
-    }
-    firstfac(n) == n
-}
-
-/// Find the first factor (other than 1) of a number
-fn firstfac(x: u32) -> u32 {
+fn is_prime(x: u32) -> bool {
+    // If even, it is not prime
     if x % 2 == 0 {
-        return 2;
+        return false;
     };
-    // TODO: return to step_by
-    // for n in (3..).step_by(2).take_while(|m| m*m <= x) {
-    for n in (1..).map(|m| 2 * m + 1).take_while(|m| m * m <= x) {
+    // Check every odd number up until the square root i.e. the square exceeds x
+    for n in (3..).step_by(2).take_while(|m| m * m <= x) {
         if x % n == 0 {
-            return n;
+            return false;
         };
     }
     // No factor found. It must be prime.
-    x
+    true
 }
