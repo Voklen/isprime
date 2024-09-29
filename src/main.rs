@@ -1,13 +1,17 @@
-use actix_web::{get, web, App, HttpServer, Responder};
+use actix_web::{get, middleware, web, App, HttpServer, Responder};
 use std::env;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let port = get_port();
     let address: &str = &get_address();
-    let server = HttpServer::new(|| App::new().service(greet))
-        .bind((address, port))?
-        .run();
+    let server = HttpServer::new(|| {
+        App::new()
+            .wrap(middleware::NormalizePath::trim())
+            .service(greet)
+    })
+    .bind((address, port))?
+    .run();
     println!("Server started on: {address}:{port}");
     server.await
 }
