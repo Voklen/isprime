@@ -1,11 +1,24 @@
 use actix_web::{get, web, App, HttpServer, Responder};
+use std::env;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| App::new().service(greet))
-        .bind(("0.0.0.0", 8080))?
-        .run()
-        .await
+    let port = get_port();
+    let address: &str = &get_address();
+    let server = HttpServer::new(|| App::new().service(greet))
+        .bind((address, port))?
+        .run();
+    println!("Server started on: {address}:{port}");
+    server.await
+}
+
+fn get_port() -> u16 {
+    let port_string = env::var("PORT").unwrap_or("8080".to_string());
+    port_string.parse().expect("PORT variable must be a number")
+}
+
+fn get_address() -> String {
+    env::var("ADDRESS").unwrap_or("0.0.0.0".to_string())
 }
 
 #[get("/api/isprime/{number}")]
